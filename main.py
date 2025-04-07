@@ -33,6 +33,9 @@ def get_file_list_and_summaries(directory):
         if ".attachments" in dirs:
             dirs.remove(".attachments")
         for file in files:
+            # .orderファイルと.gitignoreファイルをスキップ
+            if file in [".order", ".gitignore"]:
+                continue
             file_path = os.path.join(root, file)
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
