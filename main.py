@@ -45,8 +45,8 @@ def get_file_list_and_summaries(directory):
     return file_summaries
 
 
-# --- プロンプトを構築するロジックを変更 ---
-def build_prompt_from_files(file_summaries):
+# --- 新しいフォルダ構成を提案するプロンプトを構築 ---
+def build_prompt_for_new_structure(file_summaries):
     file_details = "\n".join(
         [f"- {path}: {summary}" for path, summary in file_summaries]
     )
@@ -55,11 +55,14 @@ def build_prompt_from_files(file_summaries):
 
 {file_details}
 
+以下は現在のフォルダ構成を考慮せず、まっさらな状態から最適なフォルダ構成を提案してください。
+
 期待する出力:
 1. 新しいフォルダ構成（省略せずにすべて記載してください）
 2. 簡単な説明
 3. ファイル移動提案
 """
+
     return base_prompt
 
 
@@ -103,7 +106,7 @@ wiki_root = "./wiki"
 file_summaries = get_file_list_and_summaries(wiki_root)
 
 # --- 新しいプロンプトを構築 ---
-prompt = build_prompt_from_files(file_summaries)
+prompt = build_prompt_for_new_structure(file_summaries)
 
 # プロンプトを保存
 save_prompt_to_file(prompt)
