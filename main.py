@@ -23,9 +23,7 @@ def get_file_list_and_summaries(directory):
     file_summaries = []
     for root, _, files in os.walk(directory):
         # wiki直下のattachmentsフォルダと.gitフォルダを無視
-        if root == os.path.join(directory, "attachments") or root == os.path.join(
-            directory, ".git"
-        ):
+        if ".git" in root.split(os.sep) or ".attachments" in root.split(os.sep):
             continue
         for file in files:
             file_path = os.path.join(root, file)
