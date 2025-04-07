@@ -18,6 +18,19 @@ wiki_root = "./wiki"
 tree_output, summary_output = walk_directory(wiki_root)
 
 
+# --- 要約中のリンクを文字列として扱う処理を追加 ---
+def simplify_links(text):
+    import re
+
+    # URLを簡略化
+    return re.sub(r"https?://\S+", "[リンク]", text)
+
+
+# 要約と構成のリンクを簡略化
+tree_output = simplify_links(tree_output)
+summary_output = simplify_links(summary_output)
+
+
 # --- トークン使用量を削減するための修正 ---
 def build_prompt(tree_text, summary_text):
     # プロンプトを簡略化

@@ -40,7 +40,7 @@ def extract_summary_from_markdown(file_path, max_paragraphs=3):
 
 
 def walk_directory(root_dir):
-    ignored_dirs = [".attachment", ".git"]  # 無視するフォルダを指定
+    ignored_dirs = [".attachments", ".git"]  # 無視するフォルダを指定
     structure_lines = []
     summaries = []
 
