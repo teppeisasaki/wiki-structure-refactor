@@ -24,10 +24,13 @@ def get_file_list_and_summaries(directory):
     for root, _, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
-                summary = content[:200]  # ファイルの最初の200文字を概要として使用
-                file_summaries.append((file_path, summary))
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    summary = content[:200]  # ファイルの最初の200文字を概要として使用
+                    file_summaries.append((file_path, summary))
+            except (UnicodeDecodeError, FileNotFoundError) as e:
+                print(f"⚠️ ファイルを処理中にエラーが発生しました: {file_path} - {e}")
     return file_summaries
 
 
@@ -80,12 +83,13 @@ def call_openai(prompt):
     result = ""
     print("🔄 ストリーミング中...")
     for chunk in response:
-        if "choices" in chunk:
-            delta = chunk["choices"][0]["delta"]
-            if "content" in delta:
-                content = delta["content"]
-                print(content, end="", flush=True)  # 途中結果を表示
-                result += content
+        if hasattr(chunk, "choices") and chunk.choices:
+            delta = chunk.choices[0].delta
+            if hasattr(delta, "content"):
+                content = delta.content
+                if content is not None:
+                    print(content, end="", flush=True)  # 途中結果を表示
+                    result += content
 
     print("\n✅ ストリーミング完了")
     return result
