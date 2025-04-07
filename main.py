@@ -13,12 +13,6 @@ client = AzureOpenAI(
 )
 
 
-# --- トークン数を計算する関数を追加 ---
-def calculate_token_count(text):
-    # トークン数を計算する簡易的な方法
-    return len(text.split())
-
-
 # --- ファイル一覧と概要を取得する関数を追加 ---
 def get_file_list_and_summaries(directory):
     file_summaries = []
@@ -62,15 +56,10 @@ def build_prompt_from_files(file_summaries):
 {file_details}
 
 期待する出力:
-1. 新しいフォルダ構成
+1. 新しいフォルダ構成（省略せずにすべて記載してください）
 2. 簡単な説明
 3. ファイル移動提案
 """
-
-    # トークン数を計算
-    token_count = calculate_token_count(base_prompt)
-    print(f"🔢 プロンプトのトークン数: {token_count}")
-
     return base_prompt
 
 
@@ -83,9 +72,6 @@ def save_prompt_to_file(prompt, file_path="debug_prompt.txt"):
 
 # --- LLM 呼び出しのトークン数を最大化 ---
 def call_openai(prompt):
-    max_tokens_for_response = 4096 - calculate_token_count(
-        prompt
-    )  # 最大トークン数からプロンプトのトークン数を引く
     response = client.chat.completions.create(
         model=deployment_name,
         messages=[
@@ -93,7 +79,6 @@ def call_openai(prompt):
             {"role": "user", "content": prompt},
         ],
         temperature=0.7,
-        max_tokens=max_tokens_for_response,  # 動的に計算したトークン数を設定
         stream=True,  # ストリーミングを有効化
     )
 
