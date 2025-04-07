@@ -1,4 +1,5 @@
 import os
+import re
 from openai import AzureOpenAI
 
 import dotenv
@@ -36,6 +37,10 @@ def get_file_list_and_summaries(directory):
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
+                    # HTMLタグを削除
+                    content = re.sub(r"<[^>]+>", "", content)
+                    # 改行を削除
+                    content = content.replace("\n", " ")
                     summary = content[:200]  # ファイルの最初の200文字を概要として使用
                     file_summaries.append((file_path, summary))
             except (UnicodeDecodeError, FileNotFoundError) as e:

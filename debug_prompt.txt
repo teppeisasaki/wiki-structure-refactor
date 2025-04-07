@@ -1,14 +1,8 @@
 
 以下は現在のファイル一覧とそれぞれの概要です。
 
-- ./wiki/nginx.md: <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/9335b488-ffcc-4157-8364-2370a0b70ad0">
-  <source media="(prefers-color-scheme: light)" srcse
-- ./wiki/flask.md: # Flask
-
-Flask is a lightweight [WSGI] web application framework. It is designed
-to make getting started quick and easy, with the ability to scale up to
-complex applications. It began as a simple wrap
+- ./wiki/nginx.md:             NGINX (pronounced "engine x" or "en-jin-eks") is the world's most popular Web Server, high performance Load Balancer, Reverse Proxy, API Gateway and Content Cache.  NGINX is free and open 
+- ./wiki/flask.md: # Flask  Flask is a lightweight [WSGI] web application framework. It is designed to make getting started quick and easy, with the ability to scale up to complex applications. It began as a simple wrap
 
 期待する出力:
 1. 新しいフォルダ構成
