@@ -18,35 +18,33 @@ wiki_root = "./wiki"
 tree_output, summary_output = walk_directory(wiki_root)
 
 
-# --- 2. プロンプトを組み立てる ---
+# --- トークン使用量を削減するための修正 ---
 def build_prompt(tree_text, summary_text):
+    # プロンプトを簡略化
     return f"""
-以下は Azure DevOps Wiki の現在のページ構成と、各ページの要約です。
+以下は現在のWiki構成と要約です。
 
-この情報をもとに、今後情報が増えても破綻しないようなディレクトリ構成に再設計してください。  
-目的は「拡張性」と「保守性」の高い情報設計です。
-
----
-
-【現在のWiki構成】
+【構成】
 {tree_text}
 
----
-
-【各ページの要約】
+【要約】
 {summary_text}
 
----
-
-【期待する出力フォーマット】
-
-1. 新しいディレクトリ構成（tree形式）
-2. 各ディレクトリ/カテゴリの簡単な説明（任意）
-3. 移動や統合が必要なファイルがあれば、旧パス→新パスの提案
+期待する出力:
+1. 新しい構成
+2. 簡単な説明
+3. ファイル移動提案
 """
 
 
-# --- 3. Azure OpenAI に投げる ---
+# --- デバッグ用にプロンプトをテキストファイルに出力 ---
+def save_prompt_to_file(prompt, file_path="debug_prompt.txt"):
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(prompt)
+    print(f"✅ プロンプトを {file_path} に保存しました。")
+
+
+# --- max_tokens を削減 ---
 def call_openai(prompt):
     response = client.chat.completions.create(
         model=deployment_name,
@@ -55,12 +53,16 @@ def call_openai(prompt):
             {"role": "user", "content": prompt},
         ],
         temperature=0.7,
-        max_tokens=4000,
+        max_tokens=2000,  # トークン数を削減
     )
     return response.choices[0].message.content
 
 
 prompt = build_prompt(tree_output, summary_output)
+
+# プロンプトを保存
+save_prompt_to_file(prompt)
+
 llm_response = call_openai(prompt)
 
 # --- 4. 結果を保存 ---
