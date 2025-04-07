@@ -21,10 +21,16 @@ def calculate_token_count(text):
 # --- ファイル一覧と概要を取得する関数を追加 ---
 def get_file_list_and_summaries(directory):
     file_summaries = []
-    for root, _, files in os.walk(directory):
+    for root, dirs, files in os.walk(directory):
         # wiki直下のattachmentsフォルダと.gitフォルダを無視
-        if ".git" in root.split(os.sep) or ".attachments" in root.split(os.sep):
+        if root == os.path.join(directory, ".attachments") or root == os.path.join(
+            directory, ".git"
+        ):
             continue
+        if ".git" in dirs:
+            dirs.remove(".git")
+        if ".attachments" in dirs:
+            dirs.remove(".attachments")
         for file in files:
             file_path = os.path.join(root, file)
             try:
