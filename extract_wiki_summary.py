@@ -22,9 +22,9 @@ def extract_summary_from_markdown(file_path, max_paragraphs=3):
             if inside_code_block or stripped.startswith(("- ", "* ", ">")):
                 continue
 
-            # h1 をタイトルとして取得
-            if not title and stripped.startswith("# "):
-                title = stripped.strip("# ").strip()
+            # h1 をタイトルとして取得（スペースがなくても対応）
+            if not title and stripped.startswith("#"):
+                title = stripped[1:].strip()  # `#` の後の文字列全体を取得
                 continue
 
             # 最初の数段落を要約として取得
@@ -40,6 +40,7 @@ def extract_summary_from_markdown(file_path, max_paragraphs=3):
 
 
 def walk_directory(root_dir):
+    ignored_dirs = [".attachment", ".git"]  # 無視するフォルダを指定
     structure_lines = []
     summaries = []
 
@@ -50,6 +51,8 @@ def walk_directory(root_dir):
             connector = "└── " if i == len(items) - 1 else "├── "
             structure_lines.append(f"{prefix}{connector}{item}")
             if os.path.isdir(path):
+                if item in ignored_dirs:
+                    continue
                 new_prefix = prefix + ("    " if i == len(items) - 1 else "│   ")
                 walk(path, new_prefix)
             elif item.endswith(".md"):
