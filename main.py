@@ -11,43 +11,47 @@ client = AzureOpenAI(
     api_key=os.getenv("AZURE_OPENAI_KEY"), api_version="2023-07-01-preview"
 )
 
-# --- 1. Markdown から構成と要約を抽出する ---
-from extract_wiki_summary import walk_directory
 
-wiki_root = "./wiki"
-tree_output, summary_output = walk_directory(wiki_root)
-
-
-# --- 要約中のリンクを文字列として扱う処理を追加 ---
-def simplify_links(text):
-    import re
-
-    # URLを簡略化
-    return re.sub(r"https?://\S+", "[リンク]", text)
+# --- トークン数を計算する関数を追加 ---
+def calculate_token_count(text):
+    # トークン数を計算する簡易的な方法
+    return len(text.split())
 
 
-# 要約と構成のリンクを簡略化
-tree_output = simplify_links(tree_output)
-summary_output = simplify_links(summary_output)
+# --- ファイル一覧と概要を取得する関数を追加 ---
+def get_file_list_and_summaries(directory):
+    file_summaries = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                summary = content[:200]  # ファイルの最初の200文字を概要として使用
+                file_summaries.append((file_path, summary))
+    return file_summaries
 
 
-# --- トークン使用量を削減するための修正 ---
-def build_prompt(tree_text, summary_text):
-    # プロンプトを簡略化
-    return f"""
-以下は現在のWiki構成と要約です。
+# --- プロンプトを構築するロジックを変更 ---
+def build_prompt_from_files(file_summaries):
+    file_details = "\n".join(
+        [f"- {path}: {summary}" for path, summary in file_summaries]
+    )
+    base_prompt = f"""
+以下は現在のファイル一覧とそれぞれの概要です。
 
-【構成】
-{tree_text}
-
-【要約】
-{summary_text}
+{file_details}
 
 期待する出力:
-1. 新しい構成
+1. 新しいフォルダ構成
 2. 簡単な説明
 3. ファイル移動提案
 """
+
+    # トークン数を計算
+    token_count = calculate_token_count(base_prompt)
+    print(f"🔢 プロンプトのトークン数: {token_count}")
+
+    return base_prompt
 
 
 # --- デバッグ用にプロンプトをテキストファイルに出力 ---
@@ -57,8 +61,11 @@ def save_prompt_to_file(prompt, file_path="debug_prompt.txt"):
     print(f"✅ プロンプトを {file_path} に保存しました。")
 
 
-# --- max_tokens を削減 ---
+# --- LLM 呼び出しのトークン数を最大化 ---
 def call_openai(prompt):
+    max_tokens_for_response = 4096 - calculate_token_count(
+        prompt
+    )  # 最大トークン数からプロンプトのトークン数を引く
     response = client.chat.completions.create(
         model=deployment_name,
         messages=[
@@ -66,19 +73,39 @@ def call_openai(prompt):
             {"role": "user", "content": prompt},
         ],
         temperature=0.7,
-        max_tokens=2000,  # トークン数を削減
+        max_tokens=max_tokens_for_response,  # 動的に計算したトークン数を設定
+        stream=True,  # ストリーミングを有効化
     )
-    return response.choices[0].message.content
+
+    result = ""
+    print("🔄 ストリーミング中...")
+    for chunk in response:
+        if "choices" in chunk:
+            delta = chunk["choices"][0]["delta"]
+            if "content" in delta:
+                content = delta["content"]
+                print(content, end="", flush=True)  # 途中結果を表示
+                result += content
+
+    print("\n✅ ストリーミング完了")
+    return result
 
 
-prompt = build_prompt(tree_output, summary_output)
+wiki_root = "./wiki"
+
+# --- ファイル一覧と概要を取得 ---
+file_summaries = get_file_list_and_summaries(wiki_root)
+
+# --- 新しいプロンプトを構築 ---
+prompt = build_prompt_from_files(file_summaries)
 
 # プロンプトを保存
 save_prompt_to_file(prompt)
 
+# --- LLM 呼び出し ---
 llm_response = call_openai(prompt)
 
-# --- 4. 結果を保存 ---
+# --- 結果を保存 ---
 with open("wiki_restructure_suggestion.txt", "w", encoding="utf-8") as f:
     f.write(llm_response)
 
