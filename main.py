@@ -22,6 +22,9 @@ def calculate_token_count(text):
 def get_file_list_and_summaries(directory):
     file_summaries = []
     for root, _, files in os.walk(directory):
+        # 添付画像フォルダと.gitフォルダを無視
+        if "attachments" in root or ".git" in root:
+            continue
         for file in files:
             file_path = os.path.join(root, file)
             try:
